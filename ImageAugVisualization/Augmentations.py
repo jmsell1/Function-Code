@@ -1,7 +1,12 @@
+
 import numpy as np
 from scipy import signal
 import random
 import cv2
+
+from PIL import Image, ImageFilter, ImageEnhance
+from numpy import asarray
+import io
 
 #Random blur the image
 def blur(x,blurSigma=1.):
@@ -61,7 +66,6 @@ def blockout(x,blockSize=16):
 class DrawHair:
     """
     Draw a random number of pseudo hairs
-
     Args:
         hairs (int): maximum number of hairs to draw
         width (tuple): possible width of the hair in pixels
@@ -75,7 +79,6 @@ class DrawHair:
         """
         Args:
             img (PIL Image): Image to draw hairs on.
-
         Returns:
             PIL Image: Image with drawn hairs.
         """
@@ -96,3 +99,84 @@ class DrawHair:
 
     def __repr__(self):
         return f'{self.__class__.__name__}(hairs={self.hairs}, width={self.width})'
+
+#Jacob's Functions
+def compress(x, qual, newfile = ''):
+    img = io.BytesIO()
+    x.save(img, format = 'JPEG',quality = qual)
+    if newfile != '':
+        newimg = np.array(Image.open(img))
+        newimg = Image.fromarray(newimg)
+        newimg.save(newfile)
+    return Image.open(img)
+
+def gaussian(x, rad, newfile = ''): #original filename, radius of blur, new filename
+    img = x.filter(ImageFilter.GaussianBlur(radius = rad))
+    if newfile != '':
+        img.save(newfile)
+    return img
+
+def bitdepth(x, newfile = ''): #original filename, new filename
+    data = asarray(x)
+    newdata = data/32
+    newdata = np.clip((np.around(newdata))*32, 0, 255)
+    img = Image.fromarray(newdata.astype('uint8'))
+    if newfile != '':
+        img.save(newfile)
+    return img
+
+def motionblur(x, rad, newfile = ''): #original filename, radius of blur, new filename
+    kernel_motion_blur = np.zeros((rad, rad))
+    kernel_motion_blur[int((rad-1)/2), :] = np.ones(rad)
+    kernel_motion_blur = kernel_motion_blur / rad
+    img = cv2.filter2D(x, -1, kernel_motion_blur)
+    if newfile != '':
+        cv2.imwrite(newfile, img)
+    return img
+
+def radial(x, newfile = ''): #original filename, new filename
+    w, h = x.shape[:2]
+    center_x = w / 2
+    center_y = h / 2
+    blur = 0.015
+    growMapx = np.tile(np.arange(h) + ((np.arange(h) - center_x)*blur), (w, 1)).astype(np.float32)
+    shrinkMapx = np.tile(np.arange(h) - ((np.arange(h) - center_x)*blur), (w, 1)).astype(np.float32)
+    growMapy = np.tile(np.arange(w) + ((np.arange(w) - center_y)*blur), (h, 1)).transpose().astype(np.float32)
+    shrinkMapy = np.tile(np.arange(w) - ((np.arange(w) - center_y)*blur), (h, 1)).transpose().astype(np.float32)
+    for i in range(5):
+        tmp1 = cv2.remap(x, growMapx, growMapy, cv2.INTER_LINEAR)
+        tmp2 = cv2.remap(x, shrinkMapx, shrinkMapy, cv2.INTER_LINEAR)
+        img = cv2.addWeighted(tmp1, 0.5, tmp2, 0.5, 0)
+    if newfile != '':
+        cv2.imwrite(newfile,x)
+    return img
+
+def colorshift(x, factor, newfile = ''): #original filename, degree of color (default = 1), new filename
+    enhancer = ImageEnhance.Color(x)
+    img = enhancer.enhance(factor)
+    if newfile != '':
+        img.save(newfile)
+    return img
+
+def singleside(x, rad, side, newfile = ''): #original filename, radius of blur, side to be blurred, new filename
+    width, height = x.size
+    blurimg = gaussian(x, rad)
+    src1 = np.array(x)
+    src2 = np.array(blurimg)
+    maskx, masky = np.meshgrid(np.linspace(0, width, width), np.linspace(0, height, height))
+    maskx = maskx / width
+    masky = masky / height
+    if side == 'left':
+        mask = maskx
+    if side == 'right':
+        mask = 1 - maskx
+    if side == 'top':
+        mask = masky
+    if side == 'bottom':
+        mask = 1 - masky
+    mask =  np.tile(np.expand_dims(mask, 2), (3))
+    dst = src1 * mask + src2 * (1 - mask)
+    img = Image.fromarray(dst.astype(np.uint8))
+    if newfile != '':
+        img.save(newfile)
+    return img
