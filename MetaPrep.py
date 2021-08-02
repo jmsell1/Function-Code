@@ -1,10 +1,4 @@
 
-#Isolate metadata for images within TestImages folder
-#Read all images in folder
-#For each image name, find corresponding metadata in Datasets excel through pd  
-#Copy entire row (loop?) into separate pd dataframe
-#Save second pd as csv to be used in Main.py
-
 import pandas as pd
 from tqdm import tqdm
 import glob
@@ -18,7 +12,7 @@ Parlist = []
 files = glob.glob('/Volumes/J_Bac/2021/TestImages/*', recursive=True)
 df = pd.read_excel("/Volumes/J_Bac/2021/Datasets.xlsx", sheet_name='Images', engine='openpyxl', usecols='A:E')
 
-for i in tqdm(range(len(df.index))):
+for i in tqdm(range(len(df.index))): #For each image name, find corresponding metadata in Datasets file  
     fname = df.loc[i, 'Filename']
     for f in files:
         imname = f.split('/')[-1]
@@ -37,5 +31,6 @@ for i in tqdm(range(len(df.index))):
             Par = df.loc[i, 'Partition']
             Parlist.append(Par)
 
+#Create new dataframe with gathered metadata, and save as csv to be used in main.py
 newmeta = pd.DataFrame(list(zip(imglist, DSlist, Dialist, LIDlist, Parlist)), columns = ['Filename', 'Dataset Source', 'Diagnosis', 'Lesion ID', 'Partition'])
 newmeta.to_csv('/Volumes/J_Bac/2021/TestMeta.csv', index = False)
