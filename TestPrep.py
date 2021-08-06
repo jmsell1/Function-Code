@@ -1,11 +1,11 @@
 
-import shutil
 from PIL import Image
 import glob
 from tqdm import tqdm
 import random
 import os
 import pandas as pd
+import shutil
 
 #gathering random images
 files = glob.glob('/Volumes/J_Bac/2021/Datasets/*/*',recursive = True) #Dataset of images
@@ -56,7 +56,7 @@ Parlist = []
 files = glob.glob('/Volumes/J_Bac/2021/TestImages/*', recursive=True)
 df = pd.read_excel("/Volumes/J_Bac/2021/Datasets.xlsx", sheet_name='Images', engine='openpyxl', usecols='A:E')
 
-print('Isolating Metadata for Images')
+print('Isolating Metadata for Images:')
 for i in tqdm(range(len(df.index))): #For each image name, find corresponding metadata in Datasets file  
     fname = df.loc[i, 'Filename']
     fname1 = fname.lower()
