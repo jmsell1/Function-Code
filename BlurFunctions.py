@@ -54,12 +54,11 @@ def radial(img, newfile = ''): #original filename, new filename
     center_x = w / 2
     center_y = h / 2
     blur = 0.015
-    iterations = 5
     growMapx = np.tile(np.arange(h) + ((np.arange(h) - center_x)*blur), (w, 1)).astype(np.float32)
     shrinkMapx = np.tile(np.arange(h) - ((np.arange(h) - center_x)*blur), (w, 1)).astype(np.float32)
     growMapy = np.tile(np.arange(w) + ((np.arange(w) - center_y)*blur), (h, 1)).transpose().astype(np.float32)
     shrinkMapy = np.tile(np.arange(w) - ((np.arange(w) - center_y)*blur), (h, 1)).transpose().astype(np.float32)
-    for i in range(iterations):
+    for i in range(5):
         tmp1 = cv2.remap(img, growMapx, growMapy, cv2.INTER_LINEAR)
         tmp2 = cv2.remap(img, shrinkMapx, shrinkMapy, cv2.INTER_LINEAR)
         img = cv2.addWeighted(tmp1, 0.5, tmp2, 0.5, 0)
@@ -102,3 +101,20 @@ def singleside(img, rad, side, newfile = ''): #original filename, radius of blur
     return finalimg
 img = Image.open(Mole)
 singleside(img, 20, 'left')
+
+def resize(img, width, height, newfile = ''): #original filename, desired widht, desired height, new filename
+    size = (width, height)
+    img.thumbnail(size)
+    if newfile != '':
+        img.save(newfile)
+    return img
+img = Image.open(Mole)
+resize(img, 512, 512)
+
+def normalize(img, newfile = ''): #original filename, new filename
+    cv2.normalize(img, img, 0, 255, cv2.NORM_MINMAX)
+    if newfile != '':
+        cv2.imwrite(newfile, img)
+    return img
+img = cv2.imread(Mole)
+normalize(img)
