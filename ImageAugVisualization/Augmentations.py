@@ -7,6 +7,8 @@ import cv2
 from PIL import Image, ImageFilter, ImageEnhance
 from numpy import asarray
 import io
+import random
+from random import randrange
 
 #Random blur the image
 def blur(x,blurSigma=1.):
@@ -180,3 +182,36 @@ def singleside(x, rad, side, newfile = ''): #original filename, radius of blur, 
     if newfile != '':
         img.save(newfile)
     return img
+
+def resize(img, width, height, newfile = ''): #original filename, desired width, desired height, new filename
+    size = (width, height)
+    img.thumbnail(size)
+    if newfile != '':
+        img.save(newfile)
+    return img
+
+def normalize(img, newfile = ''): #original filename, new filename
+    cv2.normalize(img, img, 0, 255, cv2.NORM_MINMAX)
+    if newfile != '':
+        cv2.imwrite(newfile, img)
+    return img
+
+def randomblur(img, newfile = ''): #original filename, new filename
+    blurlist = ['gaussian', 'motion', 'radial', 'singleside']
+    blurtype = random.choice(blurlist)
+    blurmount = int(randrange(30))
+    if blurtype == 'gaussian':
+        img = Image.open(img)
+        newimg = gaussian(img, blurmount, newfile)
+    elif blurtype == 'motion':
+        img = cv2.imread(img)
+        newimg = motionblur(img, blurmount, newfile)
+    elif blurtype == 'radial':
+        img = cv2.imread(img)
+        newimg = radial(img, newfile)
+    elif blurtype == 'singleside':
+        img = Image.open(img)
+        sidelist = ['left', 'right', 'top', 'bottom']
+        randside = random.choice(sidelist)
+        newimg = singleside(img, blurmount, randside, newfile)
+    return newimg
