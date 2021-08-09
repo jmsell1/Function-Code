@@ -1,3 +1,4 @@
+
 import torch
 import torch.nn as nn 
 from torch.utils.data import Dataset
@@ -6,13 +7,15 @@ from torchvision import transforms
 import numpy as np 
 import pandas as pd 
 import os
+import random
 
 class ImageDataset(Dataset):
     
-    def __init__(self, df: pd.DataFrame, im_folder: str, transform = None, include_src = False):
+    def __init__(self, df: pd.DataFrame, im_folder: str, transform = None, transform_blur = None, include_src = False):
         
         self.df = df
         self.transform = transform
+        self.transform_blur = transform_blur
         self.im_folder = im_folder
 
         #### Changed target --> fine_grain_target (smh)
@@ -26,8 +29,13 @@ class ImageDataset(Dataset):
     def __getitem__(self,index):
         im_path = os.path.join(self.im_folder, self.df.iloc[index]['image_name'] + '.jpg')
         img = Image.open(im_path) #Image.fromarray(im_path)#cv2.imread(im_path)
-        target = self.df.iloc[index]['diagnosis']
-        img = self.transform(img)
+        rand_decimal = random.randint(0, 100)/100
+        if rand_decimal < 0.2:
+            target = self.df.iloc[index]['diagnosis']
+            img = self.transform(img)
+        elif rand_decimal >= 0.2:
+            target = 1
+            img = self.transform_blur(img)
         # return target
         if self.include_src:
             src = self.df.iloc[index]['src']
