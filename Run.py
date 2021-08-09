@@ -6,8 +6,13 @@ import cv2
 from tqdm import tqdm
 import Augmentor
 import shutil
+from PIL import Image
 
-shutil.rmtree("/Volumes/J_Bac/2021/ResizedTest/output")
+path = "/Volumes/J_Bac/2021/ResizedTest/output"
+if os.path.isdir(path) == True:
+    shutil.rmtree(path)
+else:
+    pass
 folder = "/Volumes/J_Bac/2021/ResizedTest"
 files = glob.glob(folder+'/*', recursive=True)
 

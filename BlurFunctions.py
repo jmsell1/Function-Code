@@ -4,6 +4,8 @@ import numpy as np
 from numpy import asarray
 import cv2
 import io
+import random
+from random import randrange
 
 #Sample Image
 Mole = "/Users/jacob/Desktop/Sci_Res/Sample.jpeg"
@@ -118,3 +120,24 @@ def normalize(img, newfile = ''): #original filename, new filename
     return img
 img = cv2.imread(Mole)
 normalize(img)
+
+def randomblur(img, newfile = ''): #original filename, new filename
+    blurlist = ['gaussian', 'motion', 'radial', 'singleside']
+    blurtype = random.choice(blurlist)
+    blurmount = int(randrange(30))
+    if blurtype == 'gaussian':
+        img = Image.open(img)
+        newimg = gaussian(img, blurmount, newfile)
+    elif blurtype == 'motion':
+        img = cv2.imread(img)
+        newimg = motionblur(img, blurmount, newfile)
+    elif blurtype == 'radial':
+        img = cv2.imread(img)
+        newimg = radial(img, newfile)
+    elif blurtype == 'singleside':
+        img = Image.open(img)
+        sidelist = ['left', 'right', 'top', 'bottom']
+        randside = random.choice(sidelist)
+        newimg = singleside(img, blurmount, randside, newfile)
+    return newimg
+randomblur(Mole)
