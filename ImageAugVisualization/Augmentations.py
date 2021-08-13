@@ -84,10 +84,15 @@ class DrawHair:
         Returns:
             PIL Image: Image with drawn hairs.
         """
+        PIL_flag = 0
         if not self.hairs:
             return img
-        
-        width, height, _ = img.shape
+
+        if type(img) is Image.Image:
+            img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+            PIL_flag = 1
+
+        width, height, _= img.shape
         
         for _ in range(random.randint(0, self.hairs)):
             # The origin point of the line will always be at the top half of the image
@@ -97,7 +102,10 @@ class DrawHair:
             color = (0, 0, 0)  # color of the hair. Black.
             cv2.line(img, origin, end, color, random.randint(self.width[0], self.width[1]))
         
-        return img
+        if PIL_flag == 1:
+            return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        else:
+            return img
 
     def __repr__(self):
         return f'{self.__class__.__name__}(hairs={self.hairs}, width={self.width})'
@@ -128,6 +136,7 @@ def bitdepth(x, newfile = ''): #original filename, new filename
     return img
 
 def motionblur(x, rad, newfile = ''): #original filename, radius of blur, new filename
+    x = asarray(x)
     kernel_motion_blur = np.zeros((rad, rad))
     kernel_motion_blur[int((rad-1)/2), :] = np.ones(rad)
     kernel_motion_blur = kernel_motion_blur / rad
@@ -137,6 +146,7 @@ def motionblur(x, rad, newfile = ''): #original filename, radius of blur, new fi
     return img
 
 def radial(x, newfile = ''): #original filename, new filename
+    x = asarray(x)
     w, h = x.shape[:2]
     center_x = w / 2
     center_y = h / 2
@@ -149,6 +159,7 @@ def radial(x, newfile = ''): #original filename, new filename
         tmp1 = cv2.remap(x, growMapx, growMapy, cv2.INTER_LINEAR)
         tmp2 = cv2.remap(x, shrinkMapx, shrinkMapy, cv2.INTER_LINEAR)
         img = cv2.addWeighted(tmp1, 0.5, tmp2, 0.5, 0)
+    img = Image.fromarray(img.astype('uint8'))
     if newfile != '':
         cv2.imwrite(newfile,x)
     return img
@@ -183,35 +194,33 @@ def singleside(x, rad, side, newfile = ''): #original filename, radius of blur, 
         img.save(newfile)
     return img
 
-def resize(img, width, height, newfile = ''): #original filename, desired width, desired height, new filename
+def resize(x, width, height, newfile = ''): #original filename, desired width, desired height, new filename
     size = (width, height)
-    img.thumbnail(size)
+    img = x.thumbnail(size)
     if newfile != '':
         img.save(newfile)
     return img
 
-def normalize(img, newfile = ''): #original filename, new filename
-    cv2.normalize(img, img, 0, 255, cv2.NORM_MINMAX)
+def normalize(x, newfile = ''): #original filename, new filename
+    img = cv2.normalize(x, x, 0, 255, cv2.NORM_MINMAX)
     if newfile != '':
         cv2.imwrite(newfile, img)
     return img
 
-def randomblur(img, newfile = ''): #original filename, new filename
+def randomblur(x, newfile = ''): #original filename, new filename
     blurlist = ['gaussian', 'motion', 'radial', 'singleside']
     blurtype = random.choice(blurlist)
     blurmount = int(randrange(30))
     if blurtype == 'gaussian':
-        img = Image.open(img)
-        newimg = gaussian(img, blurmount, newfile)
+        img = gaussian(x, blurmount, newfile)
     elif blurtype == 'motion':
-        img = cv2.imread(img)
-        newimg = motionblur(img, blurmount, newfile)
+        img = motionblur(x, blurmount, newfile)
     elif blurtype == 'radial':
-        img = cv2.imread(img)
-        newimg = radial(img, newfile)
+        img = radial(x, newfile)
     elif blurtype == 'singleside':
-        img = Image.open(img)
         sidelist = ['left', 'right', 'top', 'bottom']
         randside = random.choice(sidelist)
-        newimg = singleside(img, blurmount, randside, newfile)
-    return newimg
+        img = singleside(x, blurmount, randside, newfile)
+    img = np.array(img)
+    return img
+    

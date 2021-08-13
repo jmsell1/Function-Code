@@ -19,23 +19,26 @@ class ImageDataset(Dataset):
         self.im_folder = im_folder
 
         #### Changed target --> fine_grain_target (smh)
-        self.classes = self.df['diagnosis'].unique() ###### Should have been like this the whole time ! 
-        self.targets = list(df["diagnosis"])
+        self.classes = self.df['blur'].unique() ###### Should have been like this the whole time ! 
+        self.targets = list(df["blur"])
 
         self.include_src = include_src
         if self.include_src:
             self.src     = list(df['src'])
 
     def __getitem__(self,index):
-        im_path = os.path.join(self.im_folder, self.df.iloc[index]['image_name'] + '.jpg')
+        im_path = os.path.join(self.im_folder, self.df.iloc[index]['ImageID'])
         img = Image.open(im_path) #Image.fromarray(im_path)#cv2.imread(im_path)
-        rand_decimal = random.randint(0, 100)/100
-        if rand_decimal < 0.2:
-            target = self.df.iloc[index]['diagnosis']
+        target = self.df.iloc[index]['blur']
+        if target == 1:
             img = self.transform(img)
-        elif rand_decimal >= 0.2:
-            target = 1
-            img = self.transform_blur(img)
+        else:
+            rand_decimal = random.randint(0, 100)/100
+            if rand_decimal >= 0.2:
+                img = self.transform(img)
+            elif rand_decimal < 0.2:
+                target = 1
+                img = self.transform_blur(img)
         # return target
         if self.include_src:
             src = self.df.iloc[index]['src']
@@ -48,7 +51,7 @@ class ImageDataset(Dataset):
         return len(self.df)
     
     def getLabel(self, index):
-        return self.df.iloc[index]['diagnosis']
+        return self.df.iloc[index]['blur']
     
     def getFname(self,index):
-        return self.df.iloc[index]['image_name']
+        return self.df.iloc[index]['ImageID']
