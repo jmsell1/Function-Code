@@ -135,12 +135,16 @@ def bitdepth(x, newfile = ''): #original filename, new filename
         img.save(newfile)
     return img
 
-def motionblur(x, rad, newfile = ''): #original filename, radius of blur, new filename
-    x = asarray(x)
+def motionblur(img, rad, newfile = ''): #original filename, radius of blur, new filename
+    rad = np.max([rad,3])
     kernel_motion_blur = np.zeros((rad, rad))
     kernel_motion_blur[int((rad-1)/2), :] = np.ones(rad)
     kernel_motion_blur = kernel_motion_blur / rad
-    img = cv2.filter2D(x, -1, kernel_motion_blur)
+    print(kernel_motion_blur)
+    prob = random.random()
+    if prob <0.5:
+        kernel_motion_blur = np.transpose(kernel_motion_blur)
+    img = cv2.filter2D(img, -1, kernel_motion_blur)
     if newfile != '':
         cv2.imwrite(newfile, img)
     return img
